@@ -4,22 +4,26 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HitungAngsuranMobile.Models
 {
-    [Table("jadwal_angsuran")]
+    [Table("crud_test")]
     public class CrudDataAngsuran
     {
         [Key]
         public int Id { get; set; }
         
         [Required]
-        public required string KONTRAK_NO { get; set; }
+        [Column("kontrak_no")]
+        public string KONTRAK_NO { get; set; } = string.Empty;
         
         [Required]
-        public int ANGSURAN_KE { get; set; } 
+        [Column("angsuran_ke")]
+        public int ANGSURAN_KE { get; set; }
         
         [Required]
-        public required decimal ANGSURAN_PER_BULAN { get; set; }
+        [Column("angsuran_per_bulan")]
+        public decimal ANGSURAN_PER_BULAN { get; set; }
         
         [Required]
+        [Column("tanggal_jatuh_tempo")]
         public DateTime TANGGAL_JATUH_TEMPO { get; set; }
     }
 }
