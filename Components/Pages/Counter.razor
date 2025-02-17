@@ -1,0 +1,125 @@
+﻿@page "/counter"
+@inject IHttpClientFactory HttpClientFactory
+@rendermode InteractiveServer
+
+<PageTitle>Data Angsuran</PageTitle>
+
+<h3>Data Angsuran</h3>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>Detail Jadwal Angsuran</h4>
+            <button class="btn btn-primary" @onclick="ToggleTable">
+                @(showTable ? "Sembunyikan" : "Tampilkan") Detail
+            </button>
+        </div>
+    </div>
+    @if (showTable && angsuran != null)
+    {
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Kontrak No</th>
+                            <th>Angsuran Ke</th>
+                            <th>Angsuran per Bulan</th>
+                            <th>Tanggal Jatuh Tempo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in jadwalList)
+                        {
+                            <tr>
+                                <td>@item.KONTRAK_NO</td>
+                                <td>@item.ANGSURAN_KE</td>
+                                <td>@item.ANGSURAN_PER_BULAN.ToString("C")</td>
+                                <td>@item.TANGGAL_JATUH_TEMPO.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@if (angsuran != null)
+{
+    <div class="card mt-3">
+        <div class="card-header">
+            <h4>Ringkasan Angsuran</h4>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Kontrak No</th>
+                        <th>Nama Client</th>
+                        <th>Total Angsuran</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@angsuran.KONTRAK_NO</td>
+                        <td>@angsuran.CLIENT_NAME</td>
+                        <td>@angsuran.TOTAL_ANGSURAN_JATUH_TEMPO.ToString("C")</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private List<JadwalAngsuranList> jadwalList = new();
+    private JadwalAngsuran? angsuran;
+    private string? errorMessage;
+    private bool showTable;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("API");
+            jadwalList = await client.GetFromJsonAsync<List<JadwalAngsuranList>>("api/jadwalangsuran/list") ?? new();
+            angsuran = await client.GetFromJsonAsync<JadwalAngsuran>("api/jadwalangsuran/AGR00001");
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void ToggleTable()
+    {
+        showTable = !showTable;
+    }
+
+    private class JadwalAngsuranList
+    {
+        public string KONTRAK_NO { get; set; } = string.Empty;
+        public int ANGSURAN_KE { get; set; }
+        public decimal ANGSURAN_PER_BULAN { get; set; }
+        public DateTime TANGGAL_JATUH_TEMPO { get; set; }
+    }
+
+    private class JadwalAngsuran
+    {
+        public string KONTRAK_NO { get; set; } = string.Empty;
+        public string CLIENT_NAME { get; set; } = string.Empty;
+        public decimal TOTAL_ANGSURAN_JATUH_TEMPO { get; set; }
+    }
+}

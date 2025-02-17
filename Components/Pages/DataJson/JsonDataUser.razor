@@ -1,0 +1,37 @@
+﻿@page "/jsondatauser"
+@inject IHttpClientFactory HttpClientFactory
+@rendermode InteractiveServer
+
+<h3>JsonDataUser</h3>
+<table id="tabel">
+    <thead>
+        <tr>
+            <th>Nama</th>
+            <th>Language</th>
+            <th>ID</th>
+            <th>Bio</th>
+            <th>Version</th>
+        </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
+
+@code {
+
+}
+<script>
+    var table = $('#tabel').DataTable({
+        ajax:'api/JsonDataUser',
+        serverSide:true,
+        processing:true,
+        destroy:true,
+        columns: [
+            { data: 'name' },
+            { data: 'language' },
+            { data: 'id' },
+            { data: 'bio' },
+            { data: 'version' }
+        ]
+    });</script>

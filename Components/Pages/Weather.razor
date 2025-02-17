@@ -1,0 +1,126 @@
+﻿@page "/weather"
+@inject IHttpClientFactory HttpClientFactory
+@rendermode InteractiveServer
+
+<PageTitle>Detail Keterlambatan</PageTitle>
+
+<h1>Detail Keterlambatan Pembayaran</h1>
+
+@if (keterlambatanList == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>Detail Jadwal Angsuran</h4>
+                <button class="btn btn-primary" @onclick="ToggleTable">
+                    @(showTable ? "Sembunyikan" : "Tampilkan") Detail
+                </button>
+            </div>
+        </div>
+        @if (showTable && jadwalList != null)
+        {
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Kontrak No</th>
+                                <th>Angsuran Ke</th>
+                                <th>Angsuran per Bulan</th>
+                                <th>Tanggal Jatuh Tempo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in jadwalList)
+                            {
+                                <tr>
+                                    <td>@item.KONTRAK_NO</td>
+                                    <td>@item.ANGSURAN_KE</td>
+                                    <td>@item.ANGSURAN_PER_BULAN.ToString("C")</td>
+                                    <td>@item.TANGGAL_JATUH_TEMPO.ToString("dd/MM/yyyy")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-header">
+            <h4>Detail Keterlambatan</h4>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>No Kontrak</th>
+                        <th>Nama Client</th>
+                        <th>Angsuran Ke</th>
+                        <th>Hari Keterlambatan</th>
+                        <th>Total Denda</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in keterlambatanList)
+                    {
+                        <tr>
+                            <td>@item.KONTRAK_NO</td>
+                            <td>@item.CLIENT_NAME</td>
+                            <td>@item.ANGSURAN_KE</td>
+                            <td>@item.HARI_KETERLAMBATAN</td>
+                            <td>@item.TOTAL_DENDA.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private List<KeterlambatanDetail>? keterlambatanList;
+    private List<JadwalAngsuranList>? jadwalList;
+    private bool showTable;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("API");
+            keterlambatanList = await client.GetFromJsonAsync<List<KeterlambatanDetail>>("api/jadwalangsuran/keterlambatan/AGR00001");
+            jadwalList = await client.GetFromJsonAsync<List<JadwalAngsuranList>>("api/jadwalangsuran/list");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void ToggleTable()
+    {
+        showTable = !showTable;
+    }
+
+    public class KeterlambatanDetail
+    {
+        public string KONTRAK_NO { get; set; } = string.Empty;
+        public string CLIENT_NAME { get; set; } = string.Empty;
+        public int ANGSURAN_KE { get; set; }
+        public int HARI_KETERLAMBATAN { get; set; }
+        public decimal TOTAL_DENDA { get; set; }
+    }
+
+    public class JadwalAngsuranList
+    {
+        public string KONTRAK_NO { get; set; } = string.Empty;
+        public int ANGSURAN_KE { get; set; }
+        public decimal ANGSURAN_PER_BULAN { get; set; }
+        public DateTime TANGGAL_JATUH_TEMPO { get; set; }
+    }
+}

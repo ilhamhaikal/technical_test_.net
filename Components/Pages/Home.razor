@@ -1,0 +1,74 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+<PageTitle>Kalkulator Angsuran Mobil</PageTitle>
+
+<div class="container mt-4">
+    <h1>Kalkulator Angsuran Mobil</h1>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Harga Mobil (OTR)</label>
+                <input type="number" class="form-control" @bind="OTR" />
+            </div>
+
+            <div class="form-group mt-3">
+                <label>Jangka Waktu (Bulan)</label>
+                <input type="number" class="form-control" @bind="jangkaWaktu" min="1" max="60" />
+            </div>
+
+            <button class="btn btn-primary mt-3" @onclick="HitungAngsuran">Hitung Angsuran</button>
+        </div>
+
+        @if (showResult)
+        {
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Hasil Perhitungan</h5>
+                        <p>Harga Mobil (OTR): Rp @OTR.ToString("N0")</p>
+                        <p>Down Payment (20%): Rp @DP.ToString("N0")</p>
+                        <p>Pokok Utang: Rp @pokokUtang.ToString("N0")</p>
+                        <p>Jangka Waktu: @jangkaWaktu bulan</p>
+                        <p>Suku Bunga: @(bunga * 100)%</p>
+                        <p>Angsuran Per Bulan: Rp @angsuranPerBulan.ToString("N0")</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private decimal OTR { get; set; } = 240_000_000;
+    private int jangkaWaktu { get; set; } = 18;
+    private decimal DP { get; set; }
+    private decimal pokokUtang { get; set; }
+    private decimal bunga { get; set; }
+    private decimal angsuranPerBulan { get; set; }
+    private bool showResult { get; set; } = false;
+
+    private void HitungAngsuran()
+    {
+        DP = OTR * 0.2m;
+        pokokUtang = OTR - DP;
+
+        if (jangkaWaktu <= 12)
+        {
+            bunga = 0.12m;
+        }
+        else if (jangkaWaktu <= 24)
+        {
+            bunga = 0.14m;
+        }
+        else
+        {
+            bunga = 0.165m;
+        }
+
+        angsuranPerBulan = (pokokUtang + (pokokUtang * bunga)) / jangkaWaktu;
+        showResult = true;
+        StateHasChanged();
+    }
+}

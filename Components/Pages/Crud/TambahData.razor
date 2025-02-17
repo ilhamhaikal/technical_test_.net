@@ -1,0 +1,59 @@
+﻿@page "/tambahdata"
+@using HitungAngsuranMobile.Models
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Tambah Data Angsuran</h3>
+
+<EditForm Model="@model" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>Kontrak No:</label>
+        <InputText @bind-Value="model.KONTRAK_NO" class="form-control" />
+        <ValidationMessage For="@(() => model.KONTRAK_NO)" />
+    </div>
+
+    <div class="form-group">
+        <label>Angsuran Ke:</label>
+        <InputText @bind-Value="model.ANGSURAN_KE" class="form-control" />
+        <ValidationMessage For="@(() => model.ANGSURAN_KE)" />
+    </div>
+
+    <div class="form-group">
+        <label>Angsuran Per Bulan:</label>
+        <InputNumber @bind-Value="model.ANGSURAN_PER_BULAN" class="form-control" />
+        <ValidationMessage For="@(() => model.ANGSURAN_PER_BULAN)" />
+    </div>
+
+    <div class="form-group">
+        <label>Tanggal Jatuh Tempo:</label>
+        <InputDate @bind-Value="model.TANGGAL_JATUH_TEMPO" class="form-control" />
+        <ValidationMessage For="@(() => model.TANGGAL_JATUH_TEMPO)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+@code {
+    private CrudDataAngsuran model = new()
+    {
+        KONTRAK_NO = string.Empty,
+        ANGSURAN_KE = string.Empty,
+        ANGSURAN_PER_BULAN = 0,
+        TANGGAL_JATUH_TEMPO = DateTime.Now
+    };
+
+    private async Task HandleValidSubmit()
+    {
+        var client = HttpClientFactory.CreateClient("API");
+        var response = await client.PostAsJsonAsync("api/Crud", model);
+        
+        if (response.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

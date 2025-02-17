@@ -1,0 +1,15 @@
+# Configuration files
+appsettings.Development.json
+appsettings.json
+
+# Build output
+bin/
+obj/
+
+# Properties folder
+[Pp]roperties/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
