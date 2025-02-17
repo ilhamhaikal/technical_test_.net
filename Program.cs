@@ -28,8 +28,21 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient("API", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5007/");
+    client.BaseAddress = new Uri("http://localhost:5007/");
 });
+
+// Tambahkan CORS jika diperlukan
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
+
 builder.Services.AddAntiforgery();
 
 var app = builder.Build();
@@ -46,6 +59,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+
+// Tambahkan CORS
+app.UseCors("AllowAll");
 
 app.MapControllers();
 app.MapRazorComponents<App>()

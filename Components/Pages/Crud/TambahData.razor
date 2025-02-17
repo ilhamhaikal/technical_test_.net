@@ -4,56 +4,193 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-<h3>Tambah Data Angsuran</h3>
+<h3>Data Angsuran</h3>
 
-<EditForm Model="@model" OnValidSubmit="HandleValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="row mb-4">
+    <div class="col-md-6">
+        <EditForm Model="@model" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-    <div class="form-group">
-        <label>Kontrak No:</label>
-        <InputText @bind-Value="model.KONTRAK_NO" class="form-control" />
-        <ValidationMessage For="@(() => model.KONTRAK_NO)" />
+            <div class="form-group mb-3">
+                <label>Kontrak No:</label>
+                <InputText @bind-Value="model.KONTRAK_NO" class="form-control" />
+                <ValidationMessage For="@(() => model.KONTRAK_NO)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Angsuran Ke:</label>
+                <InputNumber @bind-Value="model.ANGSURAN_KE" class="form-control" />
+                <ValidationMessage For="@(() => model.ANGSURAN_KE)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Angsuran Per Bulan:</label>
+                <InputNumber @bind-Value="model.ANGSURAN_PER_BULAN" class="form-control" />
+                <ValidationMessage For="@(() => model.ANGSURAN_PER_BULAN)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Tanggal Jatuh Tempo:</label>
+                <InputDate @bind-Value="model.TANGGAL_JATUH_TEMPO" class="form-control" />
+                <ValidationMessage For="@(() => model.TANGGAL_JATUH_TEMPO)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+            @if (isEdit)
+            {
+                <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+            }
+        </EditForm>
     </div>
+</div>
 
-    <div class="form-group">
-        <label>Angsuran Ke:</label>
-        <InputText @bind-Value="model.ANGSURAN_KE" class="form-control" />
-        <ValidationMessage For="@(() => model.ANGSURAN_KE)" />
+@if (dataList != null)
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Kontrak No</th>
+                    <th>Angsuran Ke</th>
+                    <th>Angsuran Per Bulan</th>
+                    <th>Tanggal Jatuh Tempo</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in dataList)
+                {
+                    <tr>
+                        <td>@item.KONTRAK_NO</td>
+                        <td>@item.ANGSURAN_KE</td>
+                        <td>@item.ANGSURAN_PER_BULAN.ToString("N0")</td>
+                        <td>@item.TANGGAL_JATUH_TEMPO.ToShortDateString()</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" @onclick="() => EditItem(item)">Edit</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteItem(item.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
-
-    <div class="form-group">
-        <label>Angsuran Per Bulan:</label>
-        <InputNumber @bind-Value="model.ANGSURAN_PER_BULAN" class="form-control" />
-        <ValidationMessage For="@(() => model.ANGSURAN_PER_BULAN)" />
-    </div>
-
-    <div class="form-group">
-        <label>Tanggal Jatuh Tempo:</label>
-        <InputDate @bind-Value="model.TANGGAL_JATUH_TEMPO" class="form-control" />
-        <ValidationMessage For="@(() => model.TANGGAL_JATUH_TEMPO)" />
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit</button>
-</EditForm>
+}
 
 @code {
     private CrudDataAngsuran model = new()
     {
         KONTRAK_NO = string.Empty,
-        ANGSURAN_KE = string.Empty,
+        ANGSURAN_KE = 0,  // Changed from string.Empty to 0
         ANGSURAN_PER_BULAN = 0,
         TANGGAL_JATUH_TEMPO = DateTime.Now
     };
 
+    private List<CrudDataAngsuran> dataList = new();
+    private bool isEdit = false;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("API");
+            var result = await client.GetFromJsonAsync<List<CrudDataAngsuran>>("api/Crud");
+            if (result != null)
+                dataList = result;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
     private async Task HandleValidSubmit()
     {
-        var client = HttpClientFactory.CreateClient("API");
-        var response = await client.PostAsJsonAsync("api/Crud", model);
-        
-        if (response.IsSuccessStatusCode)
+        try
         {
-            NavigationManager.NavigateTo("/");
+            var client = HttpClientFactory.CreateClient("API");
+            HttpResponseMessage response;
+
+            if (isEdit)
+            {
+                response = await client.PutAsJsonAsync($"api/Crud/{model.Id}", model);
+            }
+            else
+            {
+                response = await client.PostAsJsonAsync("api/Crud", model);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+                ResetForm();
+            }
+            else
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
         }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void EditItem(CrudDataAngsuran item)
+    {
+        model = new CrudDataAngsuran
+        {
+            Id = item.Id,
+            KONTRAK_NO = item.KONTRAK_NO,
+            ANGSURAN_KE = item.ANGSURAN_KE,
+            ANGSURAN_PER_BULAN = item.ANGSURAN_PER_BULAN,
+            TANGGAL_JATUH_TEMPO = item.TANGGAL_JATUH_TEMPO
+        };
+        isEdit = true;
+    }
+
+    private async Task DeleteItem(int id)
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("API");
+            var response = await client.DeleteAsync($"api/Crud/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+            }
+            else
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void CancelEdit()
+    {
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        model = new()
+        {
+            KONTRAK_NO = string.Empty,
+            ANGSURAN_KE = 0,  // Changed from string.Empty to 0
+            ANGSURAN_PER_BULAN = 0,
+            TANGGAL_JATUH_TEMPO = DateTime.Now
+        };
+        isEdit = false;
     }
 }
